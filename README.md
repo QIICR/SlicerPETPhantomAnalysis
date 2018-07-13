@@ -1,6 +1,12 @@
+![PET Phantom Analysis Icon](PETCphantom.png)
+
 SlicerPETPhantomAnalysis Extension
 =====================================
 3D Slicer Extension for Analysis of Uniform Cylinder Phantoms in PET scans.
+
+Documentation: https://www.slicer.org/wiki/Documentation/Nightly/Modules/PETCPhantomAnalysis
+
+Sample data set: https://github.com/QIICR/SlicerPETPhantomAnalysis/releases/download/test-data/PETCylinderPhantom.zip
 
 Acknowledgements
 --------
