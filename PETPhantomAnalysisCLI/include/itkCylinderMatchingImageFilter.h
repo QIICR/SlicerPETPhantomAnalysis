@@ -44,7 +44,6 @@ public:
   itkGetMacro(SmoothingSigma, double);
   itkGetMacro(Center, PointType);
   itkGetMacro(Direction, VectorType);
-  itkGetMacro(Volume, double);
 
 protected:
   CylinderMatchingImageFilter();
@@ -63,6 +62,13 @@ private:
   PointType m_Center;
   VectorType m_Direction;
   double m_Volume;
+
+  typedef std::vector< PointType > PointList;
+  PointList GetCylinderAxisPoints(typename OutputImageType::Pointer segmentation, double threshold=1.0) const;
+  void FitLine(const PointList& axisPoints, PointType& center, VectorType& direction) const;
+  PointList RobustFitLine(const PointList& axisPoints, PointType& center, VectorType& direction, double threshold) const;
+  double DistanceFromAxis(const PointType& p, PointType& center, VectorType& direction) const;
+  std::pair<double, double> GetThresholds(std::vector<double> values, double qLow=0.25, double qHigh=0.75, double sigmaMul=2.0) const;
 };
 } //namespace ITK
 
