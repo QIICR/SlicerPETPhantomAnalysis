@@ -27,7 +27,7 @@ class PETPhantomAnalysis(ScriptedLoadableModule):
     self.parent.contributors = ["Christian Bauer (University of Iowa)"]
     self.parent.helpText = """
     Measurement of calibration and uniformity in a cylinder phantom PET scan. \
-    <a href="https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Modules/PETPhantomAnalysis">Documentation.</a>
+    <a href="https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Modules/PETCPhantomAnalysis">Documentation.</a>
     """
     self.parent.acknowledgementText = """
     This work was partially funded by NIH grants U01-CA140206 and U24-CA180918.
@@ -96,7 +96,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     self.segmentationSelector.showHidden = False
     self.segmentationSelector.showChildNodeTypes = False
     self.segmentationSelector.setMRMLScene( slicer.mrmlScene )
-    self.segmentationSelector.setToolTip( "Output liver reference region volume")
+    self.segmentationSelector.setToolTip( "Output cylinder reference region volume")
     self.segmentationSelector.connect("currentNodeChanged(bool)",self.refreshUIElements)
     parametersFormLayout.addRow("Output Volume", self.segmentationSelector)
 
@@ -181,6 +181,15 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     self.maxRelDiffValueLineEdit.setToolTip( "Maximum relative difference  in axial direction in reference region")
     parametersFormLayout.addRow("Maximum Relative Difference",self.maxRelDiffValueLineEdit)
 
+    # visualize matched cylinder
+    self.cylinderModelNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode")
+    self.cylinderModelNode.CreateDefaultDisplayNodes()
+    self.cylinderModelNode.SetName("MatchedPhantomCylinderModelNode")
+    self.cylinderModelNode.GetDisplayNode().HideFromEditorsOn()
+    self.cylinderModelNode.GetDisplayNode().SetColor(0,1,0)
+    self.cylinderModelNode.GetDisplayNode().SliceIntersectionVisibilityOn()
+    self.cylinderModelNode.HideFromEditorsOn()
+
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -188,9 +197,13 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     self.refreshUIElements()
 
   def enter(self):
-    pass
+    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().VisibilityOn()
+    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(True)
+    self.inputVolumeSelected()
 
   def exit(self):
+    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().VisibilityOff()
+    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(False)
     pass
 
   def inputVolumeSelected(self):
@@ -211,8 +224,8 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     if dicomInstanceUIDs:
       self.inputTypeLabel.text = "DICOM volume"
       sourceFileName = slicer.dicomDatabase.fileForInstance(dicomInstanceUIDs.split(" ")[0])
-      d = dicom.read_file(sourceFileName)
-      if d.Modality=='PT':
+      d = dicom.read_file(sourceFileName) if sourceFileName else None
+      if d and d.Modality=='PT':
         self.inputTypeLabel.text = "PET DICOM volume"
         self.halfLifeLineEdit.text = d.RadiopharmaceuticalInformationSequence[0].RadionuclideHalfLife
         self.activityLineEdit.text = self._doseInMicroCi(d.RadiopharmaceuticalInformationSequence[0].RadionuclideTotalDose, d.Units)
@@ -346,11 +359,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     self._createPlot(normalizedSliceMeasurements, sliceOffsets)
     
     # visualize matched cylinder
-    cylinderModelNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode")
-    cylinderModelNode.CreateDefaultDisplayNodes()
-    cylinderModelNode.GetDisplayNode().SetColor(0,1,0)
-    cylinderModelNode.GetDisplayNode().SliceIntersectionVisibilityOn()
-    cylinderModelNode.SetAndObserveMesh(self._createCylinderMesh(
+    self.cylinderModelNode.SetAndObserveMesh(self._createCylinderMesh(
       measurements['CylinderCenter'], measurements['CylinderDirection']))   
 
   def _createPlot(self, normalizedSliceMeasurements, sliceOffsets):    
@@ -455,10 +464,118 @@ class PETPhantomAnalysisTest(ScriptedLoadableModuleTest):
   def runTest(self):
     """Run as few or as many tests as needed here.
     """
+    self.setUp()
     self.test_PETPhantomAnalysis()
+    self.tearDown()
+
+  def setUp(self):
+    """ Open temporary DICOM database
+    """
+    slicer.mrmlScene.Clear(0)
+    self.delayMs = 700
+    self.tempDataDir = os.path.join(slicer.app.temporaryPath,'PETTest')
+    self.tempDicomDatabaseDir = os.path.join(slicer.app.temporaryPath,'PETTestDicom')
+
+  def doCleanups(self):
+    """ cleanup temporary data in case an exception occurs
+    """
+    self.tearDown()
+
+  def tearDown(self):
+    """ Close temporary DICOM database and remove temporary data
+    """
+    try:
+      import shutil
+      if os.path.exists(self.tempDataDir):
+        shutil.rmtree(self.tempDataDir)
+    except Exception, e:
+      import traceback
+      traceback.print_exc()
+      self.delayDisplay('Test caused exception!\n' + str(e),self.delayMs*2)
+
+  def loadTestData(self):
+    self.patienName = 'UNIFORMITY^Bio-mCT'
+    #download data and add to dicom database
+    zipFileUrl = 'https://github.com/QIICR/SlicerPETPhantomAnalysis/releases/download/test-data/PETCylinderPhantom.zip'
+    zipFilePath = self.tempDataDir+'/dicom.zip'
+    zipFileData = self.tempDataDir+'/dicom'
+    expectedNumOfFiles = 171
+    if not os.access(self.tempDataDir, os.F_OK):
+      os.mkdir(self.tempDataDir)
+    if not os.access(zipFileData, os.F_OK):
+      os.mkdir(zipFileData)
+
+    dicomWidget = slicer.modules.dicom.widgetRepresentation().self()
+    dicomPluginCheckbox =  dicomWidget.detailsPopup.pluginSelector.checkBoxByPlugin
+    dicomPluginStates = {(key,value.checked) for key,value in dicomPluginCheckbox.iteritems()}
+    for cb in dicomPluginCheckbox.itervalues(): cb.checked=False
+    dicomPluginCheckbox['DICOMScalarVolumePlugin'].checked = True
+
+    # Download, unzip, import, and load data. Verify loaded nodes.
+    loadedNodes = {'vtkMRMLScalarVolumeNode':1}
+    with DICOMUtils.LoadDICOMFilesToDatabase(zipFileUrl, zipFilePath, zipFileData, expectedNumOfFiles, {}, loadedNodes) as success:
+      self.assertTrue(success)
+
+    self.assertEqual( len( slicer.util.getNodes('vtkMRMLSubjectHierarchyNode*') ), 1 )
+    imageNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLScalarVolumeNode')
+
+    for key,value in dicomPluginStates:
+      dicomPluginCheckbox[key].checked=value
+
+    # apply the SUVbw conversion factor and set units and quantity
+    suvNormalizationFactor = 0.00012595161151
+    quantity = slicer.vtkCodedEntry()
+    quantity.SetFromString('CodeValue:126400|CodingSchemeDesignator:DCM|CodeMeaning:Standardized Uptake Value')
+    units = slicer.vtkCodedEntry()
+    units.SetFromString('CodeValue:{SUVbw}g/ml|CodingSchemeDesignator:UCUM|CodeMeaning:Standardized Uptake Value body weight')
+    multiplier = vtk.vtkImageMathematics()
+    multiplier.SetOperationToMultiplyByK()
+    multiplier.SetConstantK(suvNormalizationFactor)
+    multiplier.SetInput1Data(imageNode.GetImageData())
+    multiplier.Update()
+    imageNode.GetImageData().DeepCopy(multiplier.GetOutput())
+    imageNode.GetVolumeDisplayNode().SetWindowLevel(6,3)
+    imageNode.GetVolumeDisplayNode().SetAndObserveColorNodeID('vtkMRMLColorTableNodeInvertedGrey')
+    imageNode.SetVoxelValueQuantity(quantity)
+    imageNode.SetVoxelValueUnits(units)
+
+    return imageNode
 
   def test_PETPhantomAnalysis(self):
     """ test standard processing
     """ 
-    self.delayDisplay('Test passed!')
+    try:
+      self.assertIsNotNone( slicer.modules.petphantomanalysis )
+      with DICOMUtils.TemporaryDICOMDatabase(self.tempDicomDatabaseDir) as db:
+        self.assertTrue(db.isOpen)
+        self.assertEqual(slicer.dicomDatabase, db)
+
+        self.delayDisplay('Loading PET DICOM dataset (including download if necessary)')
+        petNode = self.loadTestData()
+
+        self.delayDisplay('Running segmentation')
+        m = slicer.util.mainWindow()
+        m.moduleSelector().selectModule('PETPhantomAnalysis')
+        qrWidget = slicer.modules.PETPhantomAnalysisWidget
+        qrWidget.inputSelector.setCurrentNode(petNode)
+        segmentationNode = qrWidget.segmentationSelector.addNode()
+        qrWidget.inputVolumeSelected()
+        qrWidget.segmentButton.click()
+
+        # assert measurements are correct
+        self.assertTrue(abs(float(qrWidget.meanValueLineEdit.text)-0.982502)<0.01)
+        self.assertTrue(abs(float(qrWidget.stdValueLineEdit.text)-0.031612)<0.01)
+        self.assertTrue(abs(float(qrWidget.maxRelDiffValueLineEdit.text)+0.0203663)<0.01)
+
+        # clean up data from DICOM database
+        import dicom
+        patientUID = DICOMUtils.getDatabasePatientUIDByPatientName(self.patienName)
+        db.removePatient(patientUID)
+
+        self.delayDisplay('Test passed!')
+
+    except Exception, e:
+      import traceback
+      traceback.print_exc()
+      self.delayDisplay('Test caused exception!\n' + str(e),self.delayMs*2)
     
