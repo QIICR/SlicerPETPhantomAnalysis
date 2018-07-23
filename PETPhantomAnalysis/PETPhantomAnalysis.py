@@ -197,13 +197,15 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     self.refreshUIElements()
 
   def enter(self):
-    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().VisibilityOn()
-    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(True)
+    if self.cylinderModelNode and self.cylinderModelNode.GetDisplayNode():
+      self.cylinderModelNode.GetDisplayNode().VisibilityOn()
+      self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(True)
     self.inputVolumeSelected()
 
   def exit(self):
-    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().VisibilityOff()
-    if self.cylinderModelNode: self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(False)
+    if self.cylinderModelNode and self.cylinderModelNode.GetDisplayNode():
+      self.cylinderModelNode.GetDisplayNode().VisibilityOff()
+      self.cylinderModelNode.GetDisplayNode().SetSliceIntersectionVisibility(False)
     pass
 
   def inputVolumeSelected(self):
@@ -302,7 +304,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
   def onApplyButton(self):
     inputVolume = self.inputSelector.currentNode()
     outputVolume = self.segmentationSelector.currentNode()
-    jsonFile = tempfile.NamedTemporaryFile()
+    jsonFile = tempfile.NamedTemporaryFile().name
     normalizationFactor = 1.0
     try: 
       normalizationFactor = float(self.normalizationFactorLineEdit.text)
@@ -311,7 +313,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
 
     cliParams = {'inputVolume': inputVolume.GetID(), \
                  'normalizationFactor': normalizationFactor, \
-                 'measurementsData': jsonFile.name,
+                 'measurementsData': jsonFile,
                  }
     if outputVolume: cliParams['outputVolume'] =  outputVolume.GetID()
 
@@ -346,7 +348,8 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
       return
 
     try:
-      measurements = json.load(open(jsonFile.name))
+      measurements = json.load(open(jsonFile))
+      os.remove(jsonFile)
     except:
       qt.QMessageBox().warning(None,"Warning","Analysis of PET cylinder phantom was not successful.")
       return
