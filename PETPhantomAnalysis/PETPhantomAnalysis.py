@@ -8,7 +8,6 @@ from datetime import datetime
 import json
 import shutil
 import tempfile
-import dicom
 
 #
 # PETPhantomAnalysis
@@ -226,7 +225,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
     if dicomInstanceUIDs:
       self.inputTypeLabel.text = "DICOM volume"
       sourceFileName = slicer.dicomDatabase.fileForInstance(dicomInstanceUIDs.split(" ")[0])
-      d = dicom.read_file(sourceFileName) if sourceFileName else None
+      d = pydicom.read_file(sourceFileName) if sourceFileName else None
       if d and d.Modality=='PT':
         self.inputTypeLabel.text = "PET DICOM volume"
         self.halfLifeLineEdit.text = d.RadiopharmaceuticalInformationSequence[0].RadionuclideHalfLife
@@ -251,7 +250,7 @@ class PETPhantomAnalysisWidget(ScriptedLoadableModuleWidget):
         elif rwvmInstanceUID: # load SUV normalization factor from RWVM file
           self.inputTypeLabel.text = "SUV normalized PET DICOM volume"
           sourceFileName = slicer.dicomDatabase.fileForInstance(rwvmInstanceUID)
-          d = dicom.read_file(sourceFileName)
+          d = pydicom.read_file(sourceFileName)
           self.inputVolumeSUVNormalizationLabel.text = d.ReferencedImageRealWorldValueMappingSequence[0].RealWorldValueMappingSequence[0].RealWorldValueSlope
     self.updateNormalizationFactor()
 
@@ -455,8 +454,8 @@ class PETPhantomAnalysisLogic(ScriptedLoadableModuleLogic):
 #
 # PETPhantomAnalysisTest
 #
-
 from DICOMLib import DICOMUtils
+import pydicom
 class PETPhantomAnalysisTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
@@ -491,13 +490,14 @@ class PETPhantomAnalysisTest(ScriptedLoadableModuleTest):
       import shutil
       if os.path.exists(self.tempDataDir):
         shutil.rmtree(self.tempDataDir)
-    except Exception, e:
+    except Exception as e:
       import traceback
       traceback.print_exc()
       self.delayDisplay('Test caused exception!\n' + str(e),self.delayMs*2)
 
   def loadTestData(self):
     self.patienName = 'UNIFORMITY^Bio-mCT'
+    
     #download data and add to dicom database
     zipFileUrl = 'https://github.com/QIICR/SlicerPETPhantomAnalysis/releases/download/test-data/PETCylinderPhantom.zip'
     zipFilePath = self.tempDataDir+'/dicom.zip'
@@ -505,26 +505,17 @@ class PETPhantomAnalysisTest(ScriptedLoadableModuleTest):
     expectedNumOfFiles = 171
     if not os.access(self.tempDataDir, os.F_OK):
       os.mkdir(self.tempDataDir)
-    if not os.access(zipFileData, os.F_OK):
+    if not os.access(zipFileData, os.F_OK): # download DICOM test dataset
       os.mkdir(zipFileData)
-
-    dicomWidget = slicer.modules.dicom.widgetRepresentation().self()
-    dicomPluginCheckbox =  dicomWidget.detailsPopup.pluginSelector.checkBoxByPlugin
-    dicomPluginStates = {(key,value.checked) for key,value in dicomPluginCheckbox.iteritems()}
-    for cb in dicomPluginCheckbox.itervalues(): cb.checked=False
-    dicomPluginCheckbox['DICOMScalarVolumePlugin'].checked = True
-
-    # Download, unzip, import, and load data. Verify loaded nodes.
-    loadedNodes = {'vtkMRMLScalarVolumeNode':1}
-    with DICOMUtils.LoadDICOMFilesToDatabase(zipFileUrl, zipFilePath, zipFileData, expectedNumOfFiles, {}, loadedNodes) as success:
-      self.assertTrue(success)
-
-    self.assertEqual( len( slicer.util.getNodes('vtkMRMLSubjectHierarchyNode*') ), 1 )
-    imageNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLScalarVolumeNode')
-
-    for key,value in dicomPluginStates:
-      dicomPluginCheckbox[key].checked=value
-
+      slicer.util.downloadAndExtractArchive( zipFileUrl, zipFilePath, zipFileData, expectedNumOfFiles)
+    DICOMUtils.importDicom(zipFileData)
+    
+    # load dataset
+    dicomFiles = slicer.util.getFilesInDirectory(zipFileData)
+    loadablesByPlugin, loadEnabled = DICOMUtils.getLoadablesFromFileLists([dicomFiles],['DICOMScalarVolumePlugin'])
+    loadedNodeIDs = DICOMUtils.loadLoadables(loadablesByPlugin)
+    imageNode = slicer.mrmlScene.GetNodeByID(loadedNodeIDs[0])
+    
     # apply the SUVbw conversion factor and set units and quantity
     suvNormalizationFactor = 0.00012595161151
     quantity = slicer.vtkCodedEntry()
@@ -570,14 +561,13 @@ class PETPhantomAnalysisTest(ScriptedLoadableModuleTest):
         self.assertTrue(abs(float(qrWidget.stdValueLineEdit.text)-0.031612)<0.01)
         self.assertTrue(abs(float(qrWidget.maxRelDiffValueLineEdit.text)+0.0203663)<0.01)
 
-        # clean up data from DICOM database
-        import dicom
+        ## clean up data from DICOM database
         patientUID = DICOMUtils.getDatabasePatientUIDByPatientName(self.patienName)
         db.removePatient(patientUID)
 
         self.delayDisplay('Test passed!')
 
-    except Exception, e:
+    except Exception as e:
       import traceback
       traceback.print_exc()
       self.delayDisplay('Test caused exception!\n' + str(e),self.delayMs*2)
