@@ -21,7 +21,7 @@
     <double>
         <name>normalizationFactor</name>
         <longflag>--normalizationFactor</longflag>
-        <description><![CDATA[INput PET volume normalization f]]></description>
+        <description><![CDATA[Input PET volume normalization factor]]></description>
         <label>Normalization Factor</label>
         <default>1.0</default>
     </double>
