@@ -34,7 +34,7 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   // as cylinder parameters
 
   typename InputImageType::ConstPointer image = this->GetInput();
-  
+
   typedef itk::SmoothingRecursiveGaussianImageFilter<InputImageType, InputImageType> SmoothingImageFilterType;
   typename SmoothingImageFilterType::Pointer smoothingFilter = SmoothingImageFilterType::New();
   smoothingFilter->SetSigma(m_SmoothingSigma);
@@ -43,9 +43,9 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   typedef itk::OtsuThresholdImageFilter<InputImageType, LabelImageType > ThresholdImageFilterType;
   typename ThresholdImageFilterType::Pointer otsuFilter = ThresholdImageFilterType::New();
   otsuFilter->SetInput(smoothingFilter->GetOutput());
-  otsuFilter->SetInsideValue(1);
-  otsuFilter->SetOutsideValue(0);
-  otsuFilter->SetReturnBinMidpoint(true);
+  otsuFilter->SetInsideValue(0);
+  otsuFilter->SetOutsideValue(1);
+  otsuFilter->SetReturnBinMidpoint(false);
   otsuFilter->Update();
   //double otsuThreshold = otsuFilter->GetThreshold(); // just for debugging
 
