@@ -16,19 +16,19 @@ template< class TInputImage, class TOutputImage=TInputImage >
 class CylinderMatchingImageFilter : public ImageToImageFilter< TInputImage, TOutputImage >
 {
 public:
-  /** Standard class typedefs. */
-  typedef CylinderMatchingImageFilter                     Self;
-  typedef ImageToImageFilter< TInputImage, TOutputImage > Superclass;
-  typedef SmartPointer< Self >                            Pointer;
+  /** Standard class type aliases. */
+  using Self = CylinderMatchingImageFilter;
+  using Superclass = ImageToImageFilter< TInputImage, TOutputImage >;
+  using Pointer = SmartPointer< Self >;
 
-  /** Useful class typedefs*/
-  typedef TInputImage                                      InputImageType;
-  typedef TOutputImage                                     OutputImageType;
-  typedef Image<short, TInputImage::ImageDimension>        LabelImageType;
-  typedef typename TInputImage::PixelType                  PixelType;
-  typedef typename TInputImage::PointType                  PointType;
-  typedef typename TInputImage::IndexType                  IndexType;
-  typedef Vector<double, TInputImage::ImageDimension>      VectorType;
+  /** Useful type aliases. */
+  using InputImageType = TInputImage;
+  using OutputImageType = TOutputImage;
+  using LabelImageType = Image<short, TInputImage::ImageDimension>;
+  using PixelType = typename TInputImage::PixelType;
+  using PointType = typename TInputImage::PointType;
+  using IndexType = typename TInputImage::IndexType;
+  using VectorType = Vector<double, TInputImage::ImageDimension>;
 
   ITK_DISALLOW_COPY_AND_ASSIGN(CylinderMatchingImageFilter);
 
@@ -62,7 +62,7 @@ private:
   VectorType m_Direction;
   double m_Volume;
 
-  typedef std::vector< PointType > PointList;
+  using PointList = std::vector< PointType >;
   PointList GetCylinderAxisPoints(typename OutputImageType::Pointer segmentation, double threshold=1.0) const;
   void FitLine(const PointList& axisPoints, PointType& center, VectorType& direction) const;
   PointList RobustFitLine(const PointList& axisPoints, PointType& center, VectorType& direction, double threshold) const;

@@ -84,13 +84,13 @@ int main( int argc, char * argv[] )
 
   try
   {
-    typedef double PixelType;
-    typedef short LabelPixelType;
-    typedef itk::Image<PixelType, 3> ImageType;
-    typedef itk::Image<LabelPixelType, 3> LabelImageType;
+    using PixelType = double;
+    using LabelPixelType = short;
+    using ImageType = itk::Image<PixelType, 3>;
+    using LabelImageType = itk::Image<LabelPixelType, 3>;
     
     // read PET scan
-    typedef itk::ImageFileReader<ImageType> ReaderType;
+    using ReaderType = itk::ImageFileReader<ImageType>;
     ReaderType::Pointer reader = ReaderType::New();
     reader->SetFileName( inputVolume.c_str() );
     reader->Update();
@@ -99,7 +99,7 @@ int main( int argc, char * argv[] )
     // normalize input data, if necessary
     if (normalizationFactor!=1.0)
     {
-      typedef itk::ShiftScaleImageFilter<ImageType, ImageType> NormalizerFilterType;
+      using NormalizerFilterType = itk::ShiftScaleImageFilter<ImageType, ImageType>;
       NormalizerFilterType::Pointer normalizer = NormalizerFilterType::New();
       normalizer->SetShift(0.0);
       normalizer->SetScale(normalizationFactor);
@@ -109,7 +109,7 @@ int main( int argc, char * argv[] )
     }
     
     // find cylinder center and orientation
-    typedef itk::CylinderMatchingImageFilter<ImageType, LabelImageType> CylinderMatchingType;
+    using CylinderMatchingType = itk::CylinderMatchingImageFilter<ImageType, LabelImageType>;
     CylinderMatchingType::Pointer cylinderMatching = CylinderMatchingType::New();
     cylinderMatching->SetInput(petScan);
     cylinderMatching->SetSmoothingSigma(12.0);
@@ -119,7 +119,7 @@ int main( int argc, char * argv[] )
     if (cylinderDirection[2]<0) cylinderDirection *= -1.0;
     
     // measure calibration and uniformity
-    typedef itk::CylinderUniformityMeasurementImageFilter<ImageType, LabelImageType> UniformityMeasurementFilterType;
+    using UniformityMeasurementFilterType = itk::CylinderUniformityMeasurementImageFilter<ImageType, LabelImageType>;
     UniformityMeasurementFilterType::Pointer uniformityMeasurements =
       UniformityMeasurementFilterType::New();
     uniformityMeasurements->SetInput(petScan);
@@ -143,7 +143,7 @@ int main( int argc, char * argv[] )
     // write measurement region volume, if requested
     if (outputVolume.size()>0)
     {
-      typedef itk::ImageFileWriter<LabelImageType> WriterType;
+      using WriterType = itk::ImageFileWriter<LabelImageType>;
       WriterType::Pointer writer = WriterType::New();
       writer->SetFileName( outputVolume.c_str() );
       writer->SetInput( measurementRegion );

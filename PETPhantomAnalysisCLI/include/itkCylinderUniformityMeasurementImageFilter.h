@@ -16,20 +16,20 @@ template< class TInputImage, class TOutputImage=TInputImage >
 class CylinderUniformityMeasurementImageFilter : public ImageToImageFilter< TInputImage, TOutputImage >
 {
 public:
-  /** Standard class typedefs. */
-  typedef CylinderUniformityMeasurementImageFilter                         Self;
-  typedef ImageToImageFilter< TInputImage, TOutputImage >  Superclass;
-  typedef SmartPointer< Self >                            Pointer;
+  /** Standard class type aliases. */
+  using Self = CylinderUniformityMeasurementImageFilter;
+  using Superclass = ImageToImageFilter< TInputImage, TOutputImage >;
+  using Pointer = SmartPointer< Self >;
 
-  /** Useful class typedefs*/
-  typedef TInputImage                                      InputImageType;
-  typedef TOutputImage                                     OutputImageType;
-  typedef typename TInputImage::PixelType                  PixelType;
-  typedef typename TOutputImage::PixelType                 OutputPixelType;
-  typedef typename TInputImage::PointType                  PointType;
-  typedef typename TInputImage::IndexType                  IndexType;
-  typedef Vector<double, TInputImage::ImageDimension > VectorType;
-  typedef VectorContainer<size_t, double>                  MeasurementVectorType;
+  /** Useful ctype aliases. */
+  using InputImageType = TInputImage;
+  using OutputImageType = TOutputImage;
+  using PixelType = typename TInputImage::PixelType;
+  using OutputPixelType = typename TOutputImage::PixelType;
+  using PointType = typename TInputImage::PointType;
+  using IndexType = typename TInputImage::IndexType;
+  using VectorType = Vector<double, TInputImage::ImageDimension > ;
+  using MeasurementVectorType = VectorContainer<size_t, double>;
 
   ITK_DISALLOW_COPY_AND_ASSIGN(CylinderUniformityMeasurementImageFilter);
 

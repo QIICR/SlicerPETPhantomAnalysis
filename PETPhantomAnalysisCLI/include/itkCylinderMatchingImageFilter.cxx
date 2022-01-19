@@ -34,12 +34,12 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
 
   typename InputImageType::ConstPointer image = this->GetInput();
 
-  typedef itk::SmoothingRecursiveGaussianImageFilter<InputImageType, InputImageType> SmoothingImageFilterType;
+  using SmoothingImageFilterType = itk::SmoothingRecursiveGaussianImageFilter<InputImageType, InputImageType>;
   typename SmoothingImageFilterType::Pointer smoothingFilter = SmoothingImageFilterType::New();
   smoothingFilter->SetSigma(m_SmoothingSigma);
   smoothingFilter->SetInput(image);
 
-  typedef itk::OtsuThresholdImageFilter<InputImageType, LabelImageType > ThresholdImageFilterType;
+  using ThresholdImageFilterType = itk::OtsuThresholdImageFilter<InputImageType, LabelImageType > ;
   typename ThresholdImageFilterType::Pointer otsuFilter = ThresholdImageFilterType::New();
   otsuFilter->SetInput(smoothingFilter->GetOutput());
   otsuFilter->SetInsideValue(0);
@@ -48,11 +48,11 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   otsuFilter->Update();
   //double otsuThreshold = otsuFilter->GetThreshold(); // just for debugging
 
-  typedef itk::ConnectedComponentImageFilter<LabelImageType, LabelImageType> LabelingImageFilterType;
+  using LabelingImageFilterType = itk::ConnectedComponentImageFilter<LabelImageType, LabelImageType>;
   typename LabelingImageFilterType::Pointer labeingFilter = LabelingImageFilterType::New();
   labeingFilter->SetInput(otsuFilter->GetOutput());
 
-  typedef itk::RelabelComponentImageFilter<LabelImageType, OutputImageType> RelabelingImageFilterType;
+  using RelabelingImageFilterType = itk::RelabelComponentImageFilter<LabelImageType, OutputImageType>;
   typename RelabelingImageFilterType::Pointer relablingFilter = RelabelingImageFilterType::New();
   relablingFilter->SetInput(labeingFilter->GetOutput());
   relablingFilter->Update();
@@ -63,7 +63,7 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
 /*
  // non-robust version
   PointType tmpPoint;
-  typedef std::vector< PointType > PointList;
+  using PointList = std::vector< PointType >;
   PointList segPoints;
   ImageRegionConstIteratorWithIndex<OutputImageType> it(segmentation,
     segmentation->GetLargestPossibleRegion());
@@ -118,7 +118,7 @@ CylinderMatchingImageFilter< TInputImage, TOutputImage >
   for (size_t i=0; i<areaSizes.size(); ++i) areaSizes[i] = sqrt(areaSizes[i]/3.14);
   std::sort(areaSizes.begin(), areaSizes.end());
   double median = areaSizes[size_t(round((areaSizes.size()-1.0)*0.5))];
-  typedef std::vector< PointType > PointList;
+  using PointList = std::vector< PointType >;
   PointList axisPoints;
   for (size_t i=0; i<nSlices; ++i)
   {
