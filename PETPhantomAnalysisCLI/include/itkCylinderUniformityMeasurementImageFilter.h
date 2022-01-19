@@ -31,6 +31,8 @@ public:
   typedef Vector<double, TInputImage::ImageDimension > VectorType;
   typedef VectorContainer<size_t, double>                  MeasurementVectorType;
 
+  ITK_DISALLOW_COPY_AND_ASSIGN(CylinderUniformityMeasurementImageFilter);
+
   /** Method for creation through the object factory. */
   itkNewMacro(Self);
 
@@ -78,9 +80,6 @@ protected:
   void GenerateData() override;
 
 private:
-  CylinderUniformityMeasurementImageFilter(const Self &); //purposely not implemented
-  void operator=(const Self &);  //purposely not implemented
-
   PointType m_Center;
   VectorType m_Direction;
   double m_Radius;

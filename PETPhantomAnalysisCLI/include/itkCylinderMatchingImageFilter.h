@@ -30,6 +30,8 @@ public:
   typedef typename TInputImage::IndexType                  IndexType;
   typedef Vector<double, TInputImage::ImageDimension>      VectorType;
 
+  ITK_DISALLOW_COPY_AND_ASSIGN(CylinderMatchingImageFilter);
+
   /** Method for creation through the object factory. */
   itkNewMacro(Self);
 
@@ -55,9 +57,6 @@ protected:
   void GenerateData() override;
 
 private:
-  CylinderMatchingImageFilter(const Self &); //purposely not implemented
-  void operator=(const Self &);  //purposely not implemented
-
   double m_SmoothingSigma;
   PointType m_Center;
   VectorType m_Direction;
