@@ -91,7 +91,7 @@ int main( int argc, char * argv[] )
     
     // read PET scan
     using ReaderType = itk::ImageFileReader<ImageType>;
-    ReaderType::Pointer reader = ReaderType::New();
+    auto reader = ReaderType::New();
     reader->SetFileName( inputVolume.c_str() );
     reader->Update();
     ImageType::Pointer petScan = reader->GetOutput();
@@ -100,7 +100,7 @@ int main( int argc, char * argv[] )
     if (normalizationFactor!=1.0)
     {
       using NormalizerFilterType = itk::ShiftScaleImageFilter<ImageType, ImageType>;
-      NormalizerFilterType::Pointer normalizer = NormalizerFilterType::New();
+      auto normalizer = NormalizerFilterType::New();
       normalizer->SetShift(0.0);
       normalizer->SetScale(normalizationFactor);
       normalizer->SetInput(petScan);
@@ -110,7 +110,7 @@ int main( int argc, char * argv[] )
     
     // find cylinder center and orientation
     using CylinderMatchingType = itk::CylinderMatchingImageFilter<ImageType, LabelImageType>;
-    CylinderMatchingType::Pointer cylinderMatching = CylinderMatchingType::New();
+    auto cylinderMatching = CylinderMatchingType::New();
     cylinderMatching->SetInput(petScan);
     cylinderMatching->SetSmoothingSigma(12.0);
     cylinderMatching->Update();
@@ -120,8 +120,7 @@ int main( int argc, char * argv[] )
     
     // measure calibration and uniformity
     using UniformityMeasurementFilterType = itk::CylinderUniformityMeasurementImageFilter<ImageType, LabelImageType>;
-    UniformityMeasurementFilterType::Pointer uniformityMeasurements =
-      UniformityMeasurementFilterType::New();
+    auto uniformityMeasurements = UniformityMeasurementFilterType::New();
     uniformityMeasurements->SetInput(petScan);
     uniformityMeasurements->SetCenter(cylinderCenter);
     uniformityMeasurements->SetDirection(cylinderDirection);
@@ -144,7 +143,7 @@ int main( int argc, char * argv[] )
     if (outputVolume.size()>0)
     {
       using WriterType = itk::ImageFileWriter<LabelImageType>;
-      WriterType::Pointer writer = WriterType::New();
+      auto writer = WriterType::New();
       writer->SetFileName( outputVolume.c_str() );
       writer->SetInput( measurementRegion );
       writer->SetUseCompression(1);
