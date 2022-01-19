@@ -93,9 +93,8 @@ void CylinderUniformityMeasurementImageFilter< TInputImage, TOutputImage >
   m_CylinderMean = std::accumulate(cylinderVoxels.begin(),
     cylinderVoxels.end(), 0.0)/double(cylinderVoxels.size());
   m_CylinderStd = 0.0;
-  for (std::vector<double>::const_iterator it=cylinderVoxels.begin();
-    it!=cylinderVoxels.end(); ++it)
-      m_CylinderStd += pow(*it-m_CylinderMean,2.0);
+  for (const auto& it : cylinderVoxels)
+    m_CylinderStd += pow(it-m_CylinderMean,2.0);
   m_CylinderStd = sqrt(m_CylinderStd/double(cylinderVoxels.size()));
 
   // calculate slice offsets

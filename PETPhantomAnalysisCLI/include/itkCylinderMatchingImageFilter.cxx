@@ -140,9 +140,8 @@ std::pair<double, double> CylinderMatchingImageFilter< TInputImage, TOutputImage
   double qHighValue = values[size_t(round((values.size()-1.0)*qHigh))];
   double mean = 0.0;
   double tmpCount = 0.0;
-  for (size_t i=0; i<values.size(); ++i)
+  for (const auto& a : values)
   {
-    double a = values[i];
     if (a>=qLowValue && a<=qHighValue)
     {
       mean+=a;
@@ -152,9 +151,8 @@ std::pair<double, double> CylinderMatchingImageFilter< TInputImage, TOutputImage
   mean/=tmpCount;
   tmpCount = 0.0;
   double std = 0.0;
-  for (size_t i=0; i<values.size(); ++i)
+  for (const auto& a : values)
   {
-    double a = values[i];
     if (a>=qLowValue && a<=qHighValue)
     {
       std+=pow(a-mean,2.0);
@@ -173,14 +171,14 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
 ::FitLine(const PointList& axisPoints, PointType& center, VectorType& direction) const
 {
   VectorType centerVector; centerVector.Fill(0);
-  for (typename PointList::const_iterator it=axisPoints.begin(); it!=axisPoints.end(); ++it)
-    centerVector += it->GetVectorFromOrigin();
+  for (const auto& it : axisPoints)
+    centerVector += it.GetVectorFromOrigin();
   center = (centerVector/double(axisPoints.size()));
 
   vnl_matrix< double > normalizedSecondOrderCentralMoments(3, 3, 0.0);
-  for (typename PointList::const_iterator it=axisPoints.begin(); it!=axisPoints.end(); ++it)
+  for (const auto& it : axisPoints)
   {
-    vnl_vector<double> v = (*it - center).GetVnlVector();
+    vnl_vector<double> v = (it - center).GetVnlVector();
     normalizedSecondOrderCentralMoments += outer_product(v,v);
   }
   vnl_symmetric_eigensystem< double > eig(normalizedSecondOrderCentralMoments);
