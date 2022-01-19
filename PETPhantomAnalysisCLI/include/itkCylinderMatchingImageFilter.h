@@ -60,7 +60,6 @@ private:
   double m_SmoothingSigma{ 1.0 };
   PointType m_Center;
   VectorType m_Direction;
-  double m_Volume;
 
   using PointList = std::vector< PointType >;
   PointList GetCylinderAxisPoints(typename OutputImageType::Pointer segmentation, double threshold=1.0) const;
