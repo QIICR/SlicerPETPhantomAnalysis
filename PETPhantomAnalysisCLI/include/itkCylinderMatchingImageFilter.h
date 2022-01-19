@@ -1,3 +1,20 @@
+/*==============================================================================
+ 
+ Program: PETPhantomAnlysisCLI
+ 
+ (c) Copyright University of Iowa All Rights Reserved.
+ 
+ See COPYRIGHT.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ 
+ ==============================================================================*/
+
 #ifndef __itkCylinderMatchingImageFilter_h
 #define __itkCylinderMatchingImageFilter_h
 
@@ -9,8 +26,14 @@ namespace itk
 {
 
 /**\class CylinderMatchingImageFilter
- * \brief short description
- * More detailed desciption
+ * \brief Identify cylinder in image and obtain center and direction.
+ * \author	Chrsitian Bauer
+ * This filter idenfifies a bright cylinder in an image assuming its
+ * main axis is routhly aligned with the z-direction. Therefore, the filter
+ * smooths the image, performs Otsu-thresholding, and identifies the largest
+ * connected component. Then, a robust line fitting is performed to obtain
+ * center and direction.
+ * The filter's outputs also the largest connected component. 
  */
 template< class TInputImage, class TOutputImage=TInputImage >
 class CylinderMatchingImageFilter : public ImageToImageFilter< TInputImage, TOutputImage >
@@ -41,10 +64,16 @@ public:
   /** Dimension of the underlying image. */
   static constexpr unsigned int InputImageDimension = TInputImage::ImageDimension;
 
-  /** Set/Get Macros */
+  /** Set smoothing parameter. Default value = 1.0. */
   itkSetMacro(SmoothingSigma, double);
+
+  /** Get smoothing parameter.  */
   itkGetMacro(SmoothingSigma, double);
+
+  /** Get cylinder center. */
   itkGetMacro(Center, PointType);
+
+  /** Get cylinder orientation. */
   itkGetMacro(Direction, VectorType);
 
 protected:

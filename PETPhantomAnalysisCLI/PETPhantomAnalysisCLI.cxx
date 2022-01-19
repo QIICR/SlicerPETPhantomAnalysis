@@ -69,8 +69,6 @@ void jsonAddMember(rapidjson::Value& element, rapidjson::Document::AllocatorType
 {
   using namespace rapidjson;
   Value r_values(kArrayType);
-  //for (std::vector<double>::const_iterator it=values.begin(); it!=values.end(); ++it)
-  //  r_values.PushBack(*it, allocator);
   for (const auto& it : values)
     r_values.PushBack(it, allocator);
   Value elementName(name.c_str(), allocator);
