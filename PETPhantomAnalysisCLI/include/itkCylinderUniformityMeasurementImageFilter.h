@@ -82,17 +82,17 @@ protected:
 private:
   PointType m_Center;
   VectorType m_Direction;
-  double m_Radius;
-  double m_Height;
+  double m_Radius{ 0.0 };
+  double m_Height{ 0.0 };
   MeasurementVectorType::Pointer m_SliceMeasurements;
   MeasurementVectorType::Pointer m_SliceOffsets;
-  double m_CylinderMean;
-  double m_CylinderStd;
-  double m_MaxRelativeDifference;
-  OutputPixelType m_LabelInside;
-  OutputPixelType m_LabelInsideRadiusLimit;
-  OutputPixelType m_LabelInsideHeightLimit;
-  OutputPixelType m_LabelOutside;
+  double m_CylinderMean{ 0.0 };
+  double m_CylinderStd{ 0.0 };
+  double m_MaxRelativeDifference{ 0.0 };
+  OutputPixelType m_LabelInside{ 1 };
+  OutputPixelType m_LabelInsideRadiusLimit{ 2 };
+  OutputPixelType m_LabelInsideHeightLimit{ 3 };
+  OutputPixelType m_LabelOutside{ 0 };
 };
 } //namespace ITK
 

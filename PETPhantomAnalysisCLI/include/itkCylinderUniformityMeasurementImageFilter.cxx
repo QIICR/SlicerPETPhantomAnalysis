@@ -13,10 +13,7 @@ namespace itk
 //----------------------------------------------------------------------------
 template< class TInputImage, class TOutputImage >
 CylinderUniformityMeasurementImageFilter< TInputImage, TOutputImage >
-::CylinderUniformityMeasurementImageFilter() :
-  m_Radius(0.0), m_Height(0.0), m_CylinderMean(0.0), m_CylinderStd(0.0),
-  m_MaxRelativeDifference(0.0), m_LabelInside(1), m_LabelInsideRadiusLimit(2),
-  m_LabelInsideHeightLimit(3), m_LabelOutside(0)
+::CylinderUniformityMeasurementImageFilter()
 {
   m_Center.Fill(0);
   m_Direction.Fill(0);

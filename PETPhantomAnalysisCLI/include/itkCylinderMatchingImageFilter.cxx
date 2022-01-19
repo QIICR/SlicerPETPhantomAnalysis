@@ -16,8 +16,7 @@ namespace itk
 //----------------------------------------------------------------------------
 template< class TInputImage, class TOutputImage >
 CylinderMatchingImageFilter< TInputImage, TOutputImage >
-::CylinderMatchingImageFilter() :
-  m_SmoothingSigma(1.0)
+::CylinderMatchingImageFilter()
 {
   m_Center.Fill(0);
   m_Direction.Fill(0);
