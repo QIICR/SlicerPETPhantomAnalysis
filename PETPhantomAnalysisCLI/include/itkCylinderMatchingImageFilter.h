@@ -47,12 +47,12 @@ public:
 
 protected:
   CylinderMatchingImageFilter();
-  ~CylinderMatchingImageFilter(){}
+  ~CylinderMatchingImageFilter() override = default;
 
-  virtual void PrintSelf(std::ostream& os, Indent indent) const;
+  void PrintSelf(std::ostream& os, Indent indent) const override;
 
   /** Does the real work. */
-  virtual void GenerateData();
+  void GenerateData() override;
 
 private:
   CylinderMatchingImageFilter(const Self &); //purposely not implemented
