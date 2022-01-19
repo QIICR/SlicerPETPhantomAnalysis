@@ -40,7 +40,7 @@ public:
   itkTypeMacro(CylinderUniformityMeasurementImageFilter, ImageToImageFilter);
 
   /** Dimension of the underlying image. */
-  itkStaticConstMacro(ImageDimension, unsigned int, TInputImage::ImageDimension);
+  static constexpr unsigned int InputImageDimension = TInputImage::ImageDimension;
 
   /** Set/Get Macros */
   itkSetMacro(Center, PointType);
