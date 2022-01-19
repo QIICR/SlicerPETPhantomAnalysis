@@ -32,15 +32,18 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   // them by size, use calculate centroid and eigenvector of largest component
   // as cylinder parameters
 
-  typename InputImageType::ConstPointer image = this->GetInput();
+  //typename InputImageType::ConstPointer image = this->GetInput();
+  auto image = this->GetInput();
 
   using SmoothingImageFilterType = itk::SmoothingRecursiveGaussianImageFilter<InputImageType, InputImageType>;
-  typename SmoothingImageFilterType::Pointer smoothingFilter = SmoothingImageFilterType::New();
+  //typename SmoothingImageFilterType::Pointer smoothingFilter = SmoothingImageFilterType::New();
+  auto smoothingFilter = SmoothingImageFilterType::New();
   smoothingFilter->SetSigma(m_SmoothingSigma);
   smoothingFilter->SetInput(image);
 
   using ThresholdImageFilterType = itk::OtsuThresholdImageFilter<InputImageType, LabelImageType > ;
-  typename ThresholdImageFilterType::Pointer otsuFilter = ThresholdImageFilterType::New();
+  //typename ThresholdImageFilterType::Pointer otsuFilter = ThresholdImageFilterType::New();
+  auto otsuFilter = ThresholdImageFilterType::New();
   otsuFilter->SetInput(smoothingFilter->GetOutput());
   otsuFilter->SetInsideValue(0);
   otsuFilter->SetOutsideValue(1);
@@ -49,7 +52,8 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   //double otsuThreshold = otsuFilter->GetThreshold(); // just for debugging
 
   using LabelingImageFilterType = itk::ConnectedComponentImageFilter<LabelImageType, LabelImageType>;
-  typename LabelingImageFilterType::Pointer labeingFilter = LabelingImageFilterType::New();
+  //typename LabelingImageFilterType::Pointer labeingFilter = LabelingImageFilterType::New();
+  auto labeingFilter = LabelingImageFilterType::New();
   labeingFilter->SetInput(otsuFilter->GetOutput());
 
   using RelabelingImageFilterType = itk::RelabelComponentImageFilter<LabelImageType, OutputImageType>;
@@ -57,7 +61,8 @@ void CylinderMatchingImageFilter< TInputImage, TOutputImage >
   relablingFilter->SetInput(labeingFilter->GetOutput());
   relablingFilter->Update();
 
-  typename OutputImageType::Pointer segmentation = relablingFilter->GetOutput();
+  //typename OutputImageType::Pointer segmentation = relablingFilter->GetOutput();
+  auto segmentation = relablingFilter->GetOutput();
   this->GetOutput()->Graft(relablingFilter->GetOutput());
 
 /*
